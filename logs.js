@@ -49,7 +49,7 @@ const exceptionLogger = Winston.createLogger({
          * @type {Object}
          */
         new Winston.transports.File({
-            filename: path.join(__dirname, "exception_logs.log"),
+            filename: path.join(__dirname, "/logs/exception_logs.log"),
         }),
     ],
 });
@@ -64,7 +64,7 @@ const accessLogger = Winston.createLogger({
          * @type {Object}
          */
         new Winston.transports.File({
-            filename: path.join(__dirname, "access_logs.log"),
+            filename: path.join(__dirname, "/logs/access_logs.log"),
         }),
     ],
 });

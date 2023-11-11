@@ -6,7 +6,7 @@ const cors = require("cors");
 
 // Import local modules
 const ConnectDB = require("./configs/dbConnect");
-const logger = require("./logs/index");
+const { exceptionLogger } = require("./logs");
 
 // Variable and function declarations
 const app = express();
@@ -23,7 +23,7 @@ const serverStart = async () => {
             // All Middlewares will go here
             app.use(
                 cors({
-                    origin: process.env.ALLOWED_ORIGIN || "*",
+                    origin: "*",
                 })
             );
             app.use(bodyParser.json());
@@ -36,7 +36,7 @@ const serverStart = async () => {
         }
     } catch (error) {
         console.error("Startup Error - ", error);
-        logger.error("(Server): ", error);
+        exceptionLogger.error("(Server): ", error);
     }
 };
 

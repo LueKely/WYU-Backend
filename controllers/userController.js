@@ -13,7 +13,7 @@ const User = require("../models/userModels");
 const FieldsValidator = require("../helpers/FieldsValidator");
 const ResponseBuilder = require("../helpers/ResponseBuilder");
 const TokenManager = require("../helpers/TokenManager");
-const { exceptionLogger, accessLogger } = require("../logs/index");
+const { exceptionLogger, accessLogger } = require("../logs");
 
 /**
  * Handles the registration of a new user.

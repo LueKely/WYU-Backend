@@ -5,7 +5,7 @@
  */
 
 const mongoose = require("mongoose");
-const { exceptionLogger } = require("../logs/index");
+const { exceptionLogger } = require("../logs");
 
 /**
  * Establishes a connection to the MongoDB database.
