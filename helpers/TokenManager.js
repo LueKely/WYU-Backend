@@ -34,7 +34,7 @@ class TokenManager {
                     };
                 }
 
-                return;
+                return response;
             } catch (error) {
                 response = {
                     status: "fail",

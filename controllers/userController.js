@@ -9,7 +9,7 @@ const asyncHandler = require("express-async-handler");
 const bcrypt = require("bcrypt");
 
 // Import Local Modules
-const User = require("../models/userModels");
+const User = require("../models/userModel");
 const FieldsValidator = require("../helpers/FieldsValidator");
 const ResponseBuilder = require("../helpers/ResponseBuilder");
 const TokenManager = require("../helpers/TokenManager");

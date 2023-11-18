@@ -23,11 +23,14 @@ const serverStart = async () => {
             // All Middlewares will go here
             app.use(
                 cors({
-                    origin: "*",
+                    origin: "http://localhost:9001",
+                    credentials: true,
                 })
             );
             app.use(bodyParser.json());
+
             app.use("/api/user", require("./routes/userRoutes"));
+            app.use("/api/recipe", require("./routes/recipeRoutes"));
 
             app.listen(PORT, () => {
                 console.log(response.message);

@@ -8,6 +8,15 @@ class Fields {
             "first_name",
             "last_name",
             "login_identifier",
+            "recipe_name",
+            "difficulty",
+            "cooking_time",
+            "description",
+            "ingredients",
+            "instructions",
+            "tags",
+            "image_url",
+            "id",
         ];
     }
 
