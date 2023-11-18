@@ -66,10 +66,9 @@ const GetRecipe = asyncHandler(async (req, res) => {
         }
     } else {
         try {
-            const recipes = await Recipe.find({}).populate(
-                "user_id",
-                "username"
-            );
+            const recipes = await Recipe.find({})
+                .sort({ updatedAt: -1 })
+                .populate("user_id", "username");
 
             if (!recipes) {
                 response.send(404, "fail", "No recipes found");
