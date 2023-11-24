@@ -166,6 +166,7 @@ const LoginUser = asyncHandler(async (req, res) => {
 
                 if (accessToken) {
                     response.send(200, "success", "Login Success!", {
+                        userData,
                         token: accessToken,
                     });
                     accessLogger.info(`User logged in: ${login_identifier}`);

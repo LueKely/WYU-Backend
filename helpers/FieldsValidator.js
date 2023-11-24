@@ -17,6 +17,9 @@ class Fields {
             "tags",
             "image_url",
             "id",
+            "user_id",
+            "recipe_id",
+            "user_comment",
         ];
     }
 

@@ -2,10 +2,14 @@
 const asyncHandler = require("express-async-handler");
 
 // Import Local Modules
+const User = require("../models/userModel");
 const Recipe = require("../models/recipeModel");
+const Like = require("../models/interactions/likesModel");
+const Save = require("../models/interactions/saveModel");
+const Comment = require("../models/interactions/commentsModel");
 const FieldsValidator = require("../helpers/FieldsValidator");
 const ResponseBuilder = require("../helpers/ResponseBuilder");
-const { exceptionLogger, accessLogger } = require("../logs");
+const { exceptionLogger } = require("../logs");
 
 const GetRecipe = asyncHandler(async (req, res) => {
     const response = new ResponseBuilder(req, res);
@@ -33,10 +37,40 @@ const GetRecipe = asyncHandler(async (req, res) => {
                 "username"
             );
 
-            if (!recipe) {
-                response.send(404, "fail", "Recipe not found");
+            const recipeLikes = await Like.find({ recipe_id: id });
+            const recipeComments = await Comment.find({ recipe_id: id }).sort({
+                updatedAt: -1,
+            });
+            const recipeSaves = await Save.find({ recipe_id: id });
+            const users = await User.find({});
+
+            if (!recipe && !recipeLikes && !recipeComments) {
+                response.send(404, "fail", "Failed to fetch data");
                 return;
             }
+
+            let likes = recipeLikes.map((like) => ({
+                _id: like._id,
+                user_id: like.user_id,
+            }));
+
+            let saves = recipeSaves.map((save) => ({
+                _id: save._id,
+                user_id: save.user_id,
+            }));
+
+            let comments = recipeComments.map((comment) => {
+                const user = users.find((user) =>
+                    user._id.equals(comment.user_id)
+                );
+
+                return {
+                    _id: comment._id,
+                    user_id: comment.user_id,
+                    username: user ? user.username : "Unknown User",
+                    user_comment: comment.user_comment,
+                };
+            });
 
             const modifiedRecipe = {
                 _id: recipe._id,
@@ -53,6 +87,9 @@ const GetRecipe = asyncHandler(async (req, res) => {
                 createdAt: recipe.createdAt,
                 updatedAt: recipe.updatedAt,
                 __v: recipe.__v,
+                likes,
+                comments,
+                saves,
             };
 
             response.send(200, "success", "Recipe found", modifiedRecipe);
@@ -69,6 +106,9 @@ const GetRecipe = asyncHandler(async (req, res) => {
             const recipes = await Recipe.find({})
                 .sort({ updatedAt: -1 })
                 .populate("user_id", "username");
+
+            const listOflikes = await Like.find({});
+            const listOfSaves = await Save.find({});
 
             if (!recipes) {
                 response.send(404, "fail", "No recipes found");
@@ -90,6 +130,16 @@ const GetRecipe = asyncHandler(async (req, res) => {
                 createdAt: recipe.createdAt,
                 updatedAt: recipe.updatedAt,
                 __v: recipe.__v,
+                likes: listOflikes
+                    .map((like) =>
+                        like.recipe_id.equals(recipe._id) ? like : null
+                    )
+                    .filter((like) => like !== null),
+                saves: listOfSaves
+                    .map((save) =>
+                        save.recipe_id.equals(recipe._id) ? save : null
+                    )
+                    .filter((save) => save !== null),
             }));
 
             response.send(200, "success", "Recipes found", modifiedRecipes);
