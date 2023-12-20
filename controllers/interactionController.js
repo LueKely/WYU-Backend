@@ -58,7 +58,7 @@ const LikeController = asyncHandler(async (req, res) => {
             let savedInteraction = await Like.create(interactionData);
 
             if (!savedInteraction) {
-                response.send(400, "fail", "Could not save interaction");
+                response.send(400, "fail", "Could not save like interaction");
                 return;
             }
 
@@ -72,8 +72,8 @@ const LikeController = asyncHandler(async (req, res) => {
         }
     } catch (error) {
         // Log the error
+        console.error(error);
         exceptionLogger.error(error);
-
         // Handle the error and send an appropriate response
         response.send(500, "error", "Internal Server Error");
     }
@@ -124,7 +124,7 @@ const CommentController = asyncHandler(async (req, res) => {
         let savedInteraction = await Comment.create(interactionData);
 
         if (!savedInteraction) {
-            response.send(400, "fail", "Could not save interaction");
+            response.send(400, "fail", "Could not save comment interaction");
             return;
         }
 
@@ -134,7 +134,6 @@ const CommentController = asyncHandler(async (req, res) => {
             `New comment has been saved`,
             savedInteraction
         );
-        return;
     } catch (error) {
         // Log the error
         exceptionLogger.error(error);
@@ -193,7 +192,11 @@ const SaveController = asyncHandler(async (req, res) => {
             let savedInteraction = await Save.create(interactionData);
 
             if (!savedInteraction) {
-                response.send(400, "fail", "Could not save interaction");
+                response.send(
+                    400,
+                    "fail",
+                    "Could not save bookmark interaction"
+                );
                 return;
             }
 
@@ -207,8 +210,8 @@ const SaveController = asyncHandler(async (req, res) => {
         }
     } catch (error) {
         // Log the error
+        console.error(error);
         exceptionLogger.error(error);
-
         // Handle the error and send an appropriate response
         response.send(500, "error", "Internal Server Error");
     }

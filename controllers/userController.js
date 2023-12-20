@@ -99,6 +99,7 @@ const RegisterUser = asyncHandler(async (req, res) => {
         response.send(201, "success", "User successfully registered!");
         accessLogger.info(`New user register: ${username} ${email}`);
     } catch (error) {
+        console.error(error);
         exceptionLogger.exception("Controllers: ", error);
         response.send(500, "error", "Internal Server Error");
     }
@@ -145,46 +146,43 @@ const LoginUser = asyncHandler(async (req, res) => {
             $or: [{ username: login_identifier }, { email: login_identifier }],
         });
 
-        if (user) {
-            // Check if the password matched
-            const isPasswordMatched = await bcrypt.compare(
-                password,
-                user.password
-            );
-
-            if (isPasswordMatched) {
-                const userData = {
-                    id: user.id,
-                    username: user.username,
-                    email: user.email,
-                    first_name: user.first_name,
-                    last_name: user.last_name,
-                };
-
-                const expirationDate = Math.floor(Date.now() / 1000) + 60 * 60;
-                const accessToken = token.generate(userData, expirationDate);
-
-                if (accessToken) {
-                    response.send(200, "success", "Login Success!", {
-                        userData,
-                        token: accessToken,
-                    });
-                    accessLogger.info(`User logged in: ${login_identifier}`);
-                    return;
-                }
-
-                // If token generation is not success
-                response.send(500, "fail", "Failed to generate token");
-                return;
-            }
-
-            // If password is not match
-            response.send(401, "fail", "Invalid Credentials");
+        // If the user is not found
+        if (!user) {
+            response.send(401, "fail", "User not found");
             return;
-        } else {
-            // If the user is not found
-            response.send(401, "fail", "Invalid Credentials");
         }
+
+        // Check if the password matched
+        const isPasswordMatched = await bcrypt.compare(password, user.password);
+
+        if (!isPasswordMatched) {
+            response.send(401, "fail", "Password not match");
+            return;
+        }
+
+        const userData = {
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            first_name: user.first_name,
+            last_name: user.last_name,
+        };
+
+        const expirationDate = Math.floor(Date.now() / 1000) + 60 * 60;
+        const accessToken = token.generate(userData, expirationDate);
+
+        // If token generation is not success
+        if (!accessToken) {
+            response.send(500, "fail", "Failed to generate token");
+            return;
+        }
+
+        response.send(200, "success", "Login Success!", {
+            userData,
+            token: accessToken,
+        });
+        accessLogger.info(`User logged in: ${login_identifier}`);
+        return;
     } catch (error) {
         exceptionLogger.exception("Controllers: ", error);
         response.send(500, "error", "Internal Server Error");

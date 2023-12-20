@@ -37,29 +37,37 @@ const GetRecipe = asyncHandler(async (req, res) => {
                 "username"
             );
 
-            const recipeLikes = await Like.find({ recipe_id: id });
-            const recipeComments = await Comment.find({ recipe_id: id }).sort({
-                updatedAt: -1,
-            });
-            const recipeSaves = await Save.find({ recipe_id: id });
-            const users = await User.find({});
+            if (!recipe) {
+                response.send(404, "fail", "Recipe not found");
+                return;
+            }
 
-            if (!recipe && !recipeLikes && !recipeComments) {
+            const [recipeLikes, recipeComments, recipeSaves, users] =
+                await Promise.all([
+                    Like.find({ recipe_id: id }),
+                    Comment.find({ recipe_id: id }).sort({
+                        updatedAt: -1,
+                    }),
+                    Save.find({ recipe_id: id }),
+                    User.find({}),
+                ]);
+
+            if (!recipeLikes && !recipeComments) {
                 response.send(404, "fail", "Failed to fetch data");
                 return;
             }
 
-            let likes = recipeLikes.map((like) => ({
+            const likes = recipeLikes.map((like) => ({
                 _id: like._id,
                 user_id: like.user_id,
             }));
 
-            let saves = recipeSaves.map((save) => ({
+            const saves = recipeSaves.map((save) => ({
                 _id: save._id,
                 user_id: save.user_id,
             }));
 
-            let comments = recipeComments.map((comment) => {
+            const comments = recipeComments.map((comment) => {
                 const user = users.find((user) =>
                     user._id.equals(comment.user_id)
                 );
@@ -96,6 +104,7 @@ const GetRecipe = asyncHandler(async (req, res) => {
             return;
         } catch (error) {
             // Log the error
+            console.error(error);
             exceptionLogger.error(error);
 
             // Handle the error and send an appropriate response
@@ -103,12 +112,13 @@ const GetRecipe = asyncHandler(async (req, res) => {
         }
     } else {
         try {
-            const recipes = await Recipe.find({})
-                .sort({ updatedAt: -1 })
-                .populate("user_id", "username");
-
-            const listOflikes = await Like.find({});
-            const listOfSaves = await Save.find({});
+            const [recipes, listOflikes, listOfSaves] = await Promise.all([
+                Recipe.find({})
+                    .sort({ updatedAt: -1 })
+                    .populate("user_id", "username"),
+                Like.find({}),
+                Save.find({}),
+            ]);
 
             if (!recipes) {
                 response.send(404, "fail", "No recipes found");
@@ -145,6 +155,7 @@ const GetRecipe = asyncHandler(async (req, res) => {
             response.send(200, "success", "Recipes found", modifiedRecipes);
             return;
         } catch (error) {
+            console.error(error);
             // Log the error
             exceptionLogger.error(error);
 
@@ -214,43 +225,41 @@ const CreateRecipe = asyncHandler(async (req, res) => {
     try {
         const user_id = req.user.id;
 
-        if (user_id) {
-            const newRecipe = new Recipe({
-                user_id,
-                recipe_name,
-                image_url,
-                difficulty,
-                tags,
-                cooking_time,
-                description,
-                ingredients,
-                instructions,
-            });
-
-            const savedRecipe = await newRecipe.save();
-
-            if (!savedRecipe) {
-                response.send(
-                    500,
-                    "fail",
-                    "Failed to create recipe",
-                    savedRecipe
-                );
-                return;
-            }
-
-            response.send(
-                201,
-                "success",
-                "Recipe created successfully",
-                savedRecipe
-            );
+        if (!user_id) {
+            response.send(400, "fail", "User not found");
             return;
         }
+
+        const newRecipe = new Recipe({
+            user_id,
+            recipe_name,
+            image_url,
+            difficulty,
+            tags,
+            cooking_time,
+            description,
+            ingredients,
+            instructions,
+        });
+
+        const savedRecipe = await newRecipe.save();
+
+        if (!savedRecipe) {
+            response.send(500, "fail", "Failed to create recipe", savedRecipe);
+            return;
+        }
+
+        response.send(
+            201,
+            "success",
+            "Recipe created successfully",
+            savedRecipe
+        );
+        return;
     } catch (error) {
         // Log the error
+        console.error(error);
         exceptionLogger.error(error);
-
         // Handle the error and send an appropriate response
         response.send(500, "error", "Internal Server Error");
     }
