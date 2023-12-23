@@ -24,6 +24,23 @@ const UserSchema = mongoose.Schema(
             type: String,
             required: [true, "Last name field is required"],
         },
+        user_bio: {
+            type: String,
+            default: "",
+        },
+        social_links: {
+            type: Map,
+            of: String,
+            default: {},
+        },
+        user_profile: {
+            type: String,
+            default: "",
+        },
+        user_bg_image: {
+            type: String,
+            default: "",
+        },
     },
     {
         timestamps: true,

@@ -20,6 +20,13 @@ class Fields {
             "user_id",
             "recipe_id",
             "user_comment",
+            "user_bio",
+            "social_links",
+            "user_profile",
+            "user_bg_image",
+            "category",
+            "categories",
+            "name",
         ];
     }
 

@@ -10,11 +10,11 @@ class ResponseBuilder {
         if (data.length === 0) {
             response.status = status;
             response.message = message;
+        } else {
+            response.status = status;
+            response.message = message;
+            response.data = responseData;
         }
-
-        response.status = status;
-        response.message = message;
-        response.data = responseData;
 
         return response;
     }

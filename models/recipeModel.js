@@ -27,6 +27,10 @@ const RecipeSchema = mongoose.Schema(
             type: Array,
             required: [true, "Tags field is required"],
         },
+        categories: {
+            type: Array,
+            required: [true, "Categories field is required"],
+        },
         description: {
             type: String,
             required: [true, "Description field is required"],

@@ -11,157 +11,305 @@ const FieldsValidator = require("../helpers/FieldsValidator");
 const ResponseBuilder = require("../helpers/ResponseBuilder");
 const { exceptionLogger } = require("../logs");
 
-const GetRecipe = asyncHandler(async (req, res) => {
+/**
+ * Controller function for retrieving all recipes
+ *
+ * @function
+ * @async
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>} - Promise that resolves after processing the request
+ */
+const GetAllRecipes = asyncHandler(async (req, res) => {
     const response = new ResponseBuilder(req, res);
     const fields = new FieldsValidator(req);
 
-    if (req.query.hasOwnProperty("id")) {
-        const { id } = req.query;
+    // Check if the fields in response are accepted
+    if (!fields.areResponseKeysAccepted(req.query)) {
+        response.send(400, "fail", "The provided query name is invalid");
+        return;
+    }
 
-        // Check if the fields in response are accepted
-        if (!fields.areResponseKeysAccepted(req.query)) {
-            response.send(400, "fail", "The provided field name is invalid");
-            return;
-        }
+    // Check if any required fields are empty
+    if (!fields.areResponseValuesEmpty(req.query)) {
+        response.send(400, "fail", "Query value is empty");
+        return;
+    }
 
-        // Check if any required fields are empty
-        if (!fields.areResponseValuesEmpty(req.query)) {
-            response.send(400, "fail", "Some fields have empty values");
-            return;
-        }
+    try {
+        const [recipes, listOflikes, listOfSaves] = await Promise.all([
+            Recipe.find({})
+                .sort({ updatedAt: -1 })
+                .populate("user_id", "username"),
+            Like.find({}),
+            Save.find({}),
+        ]);
 
-        // Proceeds to getting a recipe by id
-        try {
-            const recipe = await Recipe.findById(id).populate(
-                "user_id",
-                "username"
+        if (!recipes || recipes.length === 0) {
+            const message = !recipes
+                ? "Failed to fetch recipes"
+                : "No recipes found";
+            response.send(
+                !recipes ? 404 : 200,
+                !recipes ? "fail" : "success",
+                message
             );
-
-            if (!recipe) {
-                response.send(404, "fail", "Recipe not found");
-                return;
-            }
-
-            const [recipeLikes, recipeComments, recipeSaves, users] =
-                await Promise.all([
-                    Like.find({ recipe_id: id }),
-                    Comment.find({ recipe_id: id }).sort({
-                        updatedAt: -1,
-                    }),
-                    Save.find({ recipe_id: id }),
-                    User.find({}),
-                ]);
-
-            if (!recipeLikes && !recipeComments) {
-                response.send(404, "fail", "Failed to fetch data");
-                return;
-            }
-
-            const likes = recipeLikes.map((like) => ({
-                _id: like._id,
-                user_id: like.user_id,
-            }));
-
-            const saves = recipeSaves.map((save) => ({
-                _id: save._id,
-                user_id: save.user_id,
-            }));
-
-            const comments = recipeComments.map((comment) => {
-                const user = users.find((user) =>
-                    user._id.equals(comment.user_id)
-                );
-
-                return {
-                    _id: comment._id,
-                    user_id: comment.user_id,
-                    username: user ? user.username : "Unknown User",
-                    user_comment: comment.user_comment,
-                };
-            });
-
-            const modifiedRecipe = {
-                _id: recipe._id,
-                user_id: recipe.user_id._id,
-                username: recipe.user_id.username,
-                recipe_name: recipe.recipe_name,
-                image_url: recipe.image_url,
-                difficulty: recipe.difficulty,
-                cooking_time: recipe.cooking_time,
-                tags: recipe.tags,
-                description: recipe.description,
-                ingredients: recipe.ingredients,
-                instructions: recipe.instructions,
-                createdAt: recipe.createdAt,
-                updatedAt: recipe.updatedAt,
-                __v: recipe.__v,
-                likes,
-                comments,
-                saves,
-            };
-
-            response.send(200, "success", "Recipe found", modifiedRecipe);
             return;
-        } catch (error) {
-            // Log the error
-            console.error(error);
-            exceptionLogger.error(error);
-
-            // Handle the error and send an appropriate response
-            response.send(500, "error", "Internal Server Error");
         }
-    } else {
-        try {
-            const [recipes, listOflikes, listOfSaves] = await Promise.all([
-                Recipe.find({})
-                    .sort({ updatedAt: -1 })
-                    .populate("user_id", "username"),
-                Like.find({}),
-                Save.find({}),
+
+        const modifiedRecipes = recipes.map((recipe) => ({
+            ...recipe.toObject(),
+            likes: listOflikes.filter((like) =>
+                like.recipe_id.equals(recipe._id)
+            ),
+            saves: listOfSaves.filter((save) =>
+                save.recipe_id.equals(recipe._id)
+            ),
+        }));
+
+        response.send(200, "success", "Recipes found", modifiedRecipes);
+        return;
+    } catch (error) {
+        console.error(error);
+        // Log the error
+        exceptionLogger.error(error);
+
+        // Handle the error and send an appropriate response
+        response.send(500, "error", "Internal Server Error");
+    }
+});
+
+/**
+ * Controller function for retrieving a recipe by its id.
+ *
+ * @function
+ * @async
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>} - Promise that resolves after processing the request
+ */
+const GetRecipeById = asyncHandler(async (req, res) => {
+    const response = new ResponseBuilder(req, res);
+    const fields = new FieldsValidator(req);
+
+    // Check if the fields in response are accepted
+    if (!fields.areResponseKeysAccepted(req.query)) {
+        response.send(400, "fail", "The provided parameter name is invalid");
+        return;
+    }
+
+    // Check if any required fields are empty
+    if (!fields.areResponseValuesEmpty(req.query)) {
+        response.send(400, "fail", "Parameter value is empty");
+        return;
+    }
+
+    const { id } = req.query;
+
+    // Proceeds to getting a recipe by id
+    try {
+        const recipe = await Recipe.findById(id).populate(
+            "user_id",
+            "username"
+        );
+
+        if (!recipe) {
+            response.send(404, "fail", "Recipe not found");
+            return;
+        }
+
+        const [recipeLikes, recipeComments, recipeSaves, users] =
+            await Promise.all([
+                Like.find({ recipe_id: id }),
+                Comment.find({ recipe_id: id }).sort({
+                    updatedAt: -1,
+                }),
+                Save.find({ recipe_id: id }),
+                User.find({}),
             ]);
 
-            if (!recipes) {
-                response.send(404, "fail", "No recipes found");
-                return;
-            }
-
-            const modifiedRecipes = recipes.map((recipe) => ({
-                _id: recipe._id,
-                user_id: recipe.user_id._id,
-                username: recipe.user_id.username,
-                recipe_name: recipe.recipe_name,
-                image_url: recipe.image_url,
-                difficulty: recipe.difficulty,
-                cooking_time: recipe.cooking_time,
-                tags: recipe.tags,
-                description: recipe.description,
-                ingredients: recipe.ingredients,
-                instructions: recipe.instructions,
-                createdAt: recipe.createdAt,
-                updatedAt: recipe.updatedAt,
-                __v: recipe.__v,
-                likes: listOflikes
-                    .map((like) =>
-                        like.recipe_id.equals(recipe._id) ? like : null
-                    )
-                    .filter((like) => like !== null),
-                saves: listOfSaves
-                    .map((save) =>
-                        save.recipe_id.equals(recipe._id) ? save : null
-                    )
-                    .filter((save) => save !== null),
-            }));
-
-            response.send(200, "success", "Recipes found", modifiedRecipes);
+        if (!recipeLikes && !recipeComments) {
+            response.send(404, "fail", "Failed to fetch recipe interactions");
             return;
-        } catch (error) {
-            console.error(error);
-            // Log the error
-            exceptionLogger.error(error);
-
-            // Handle the error and send an appropriate response
-            response.send(500, "error", "Internal Server Error");
         }
+
+        const likes = recipeLikes.map((like) => ({
+            _id: like._id,
+            user_id: like.user_id,
+        }));
+
+        const saves = recipeSaves.map((save) => ({
+            _id: save._id,
+            user_id: save.user_id,
+        }));
+
+        const comments = recipeComments.map((comment) => {
+            const user = users.find((user) => user._id.equals(comment.user_id));
+
+            return {
+                _id: comment._id,
+                user_id: comment.user_id,
+                username: user ? user.username : "Unknown User",
+                user_comment: comment.user_comment,
+            };
+        });
+
+        const modifiedRecipe = {
+            ...recipe.toObject(),
+            likes,
+            comments,
+            saves,
+        };
+
+        response.send(200, "success", "Recipe found", modifiedRecipe);
+        return;
+    } catch (error) {
+        // Log the error
+        console.error(error);
+        exceptionLogger.error(error);
+
+        // Handle the error and send an appropriate response
+        response.send(500, "error", "Internal Server Error");
+    }
+});
+
+/**
+ * Controller function for retrieving recipes based on a specified category
+ *
+ * @function
+ * @async
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>} - Promise that resolves after processing the request
+ */
+const GetRecipeByCategory = asyncHandler(async (req, res) => {
+    const response = new ResponseBuilder(req, res);
+    const fields = new FieldsValidator(req);
+
+    // Check if the fields in response are accepted
+    if (!fields.areResponseKeysAccepted(req.query)) {
+        response.send(400, "fail", "The provided query name is invalid");
+        return;
+    }
+
+    // Check if any required fields are empty
+    if (!fields.areResponseValuesEmpty(req.query)) {
+        response.send(400, "fail", "Query value is empty");
+        return;
+    }
+
+    const { category } = req.query;
+
+    try {
+        const [recipes, listOflikes, listOfSaves] = await Promise.all([
+            Recipe.find({ categories: { $in: [category] } })
+                .sort({ updatedAt: -1 })
+                .populate("user_id", "username"),
+            Like.find({}),
+            Save.find({}),
+        ]);
+
+        if (!recipes || recipes.length === 0) {
+            const message = !recipes
+                ? "Failed to fetch recipes"
+                : "No recipes found";
+            response.send(
+                !recipes ? 404 : 200,
+                !recipes ? "fail" : "success",
+                message
+            );
+            return;
+        }
+
+        const modifiedRecipes = recipes.map((recipe) => ({
+            ...recipe.toObject(),
+            likes: listOflikes.filter((like) =>
+                like.recipe_id.equals(recipe._id)
+            ),
+            saves: listOfSaves.filter((save) =>
+                save.recipe_id.equals(recipe._id)
+            ),
+        }));
+
+        response.send(200, "success", "Recipes found", modifiedRecipes);
+        return;
+    } catch (error) {
+        // Log the error
+        console.error(error);
+        exceptionLogger.error(error);
+
+        // Handle the error and send an appropriate response
+        response.send(500, "error", "Internal Server Error");
+    }
+});
+
+/**
+ * Controller function for retrieving recipes by their name.
+ *
+ * @function
+ * @async
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>} - Promise that resolves after processing the request
+ */
+const GetRecipeByName = asyncHandler(async (req, res) => {
+    const response = new ResponseBuilder(req, res);
+    const fields = new FieldsValidator(req);
+
+    // Check if the fields in response are accepted
+    if (!fields.areResponseKeysAccepted(req.query)) {
+        response.send(400, "fail", "The provided query name is invalid");
+        return;
+    }
+
+    // Check if any required fields are empty
+    if (!fields.areResponseValuesEmpty(req.query)) {
+        response.send(400, "fail", "Query value is empty");
+        return;
+    }
+
+    const { name } = req.query;
+
+    try {
+        const [recipes, listOflikes, listOfSaves] = await Promise.all([
+            Recipe.find({ recipe_name: { $regex: name, $options: "i" } })
+                .sort({ updatedAt: -1 })
+                .populate("user_id", "username"),
+            Like.find({}),
+            Save.find({}),
+        ]);
+
+        if (!recipes || recipes.length === 0) {
+            const message = !recipes
+                ? "Failed to fetch recipes"
+                : "No recipes found";
+            response.send(
+                !recipes ? 404 : 200,
+                !recipes ? "fail" : "success",
+                message
+            );
+            return;
+        }
+
+        const modifiedRecipes = recipes.map((recipe) => ({
+            ...recipe.toObject(),
+            likes: listOflikes.filter((like) =>
+                like.recipe_id.equals(recipe._id)
+            ),
+            saves: listOfSaves.filter((save) =>
+                save.recipe_id.equals(recipe._id)
+            ),
+        }));
+
+        response.send(200, "success", "Recipes found", modifiedRecipes);
+        return;
+    } catch (error) {
+        // Log the error
+        console.error(error);
+        exceptionLogger.error(error);
+
+        // Handle the error and send an appropriate response
+        response.send(500, "error", "Internal Server Error");
     }
 });
 
@@ -181,6 +329,7 @@ const CreateRecipe = asyncHandler(async (req, res) => {
         difficulty,
         cooking_time,
         tags,
+        categories,
         description,
         ingredients,
         instructions,
@@ -196,6 +345,7 @@ const CreateRecipe = asyncHandler(async (req, res) => {
             image_url,
             cooking_time,
             tags,
+            categories,
             description,
             ingredients,
             instructions,
@@ -236,6 +386,7 @@ const CreateRecipe = asyncHandler(async (req, res) => {
             image_url,
             difficulty,
             tags,
+            categories,
             cooking_time,
             description,
             ingredients,
@@ -265,4 +416,10 @@ const CreateRecipe = asyncHandler(async (req, res) => {
     }
 });
 
-module.exports = { GetRecipe, CreateRecipe };
+module.exports = {
+    GetAllRecipes,
+    GetRecipeById,
+    GetRecipeByCategory,
+    GetRecipeByName,
+    CreateRecipe,
+};
