@@ -29,10 +29,10 @@ const serverStart = async () => {
             );
             app.use(bodyParser.json());
 
-            app.use("/api/user", require("./routes/authenticationRoutes"));
+            app.use("/api/auth", require("./routes/authenticationRoutes"));
+            app.use("/api/profile", require("./routes/userRoutes"));
             app.use("/api/recipe", require("./routes/recipeRoutes"));
             app.use("/api/itr", require("./routes/interactionsRoutes"));
-            app.use("/api/profile", require("./routes/userRoutes"));
 
             app.listen(PORT, () => {
                 console.log(response.message);

@@ -57,7 +57,7 @@ const GetAllRecipes = asyncHandler(async (req, res) => {
             return;
         }
 
-        const modifiedRecipes = recipes.map((recipe) => ({
+        const combinedRecipeData = recipes.map((recipe) => ({
             ...recipe.toObject(),
             likes: listOflikes.filter((like) =>
                 like.recipe_id.equals(recipe._id)
@@ -67,7 +67,7 @@ const GetAllRecipes = asyncHandler(async (req, res) => {
             ),
         }));
 
-        response.send(200, "success", "Recipes found", modifiedRecipes);
+        response.send(200, "success", "Recipes found", combinedRecipeData);
         return;
     } catch (error) {
         console.error(error);
@@ -104,29 +104,25 @@ const GetRecipeById = asyncHandler(async (req, res) => {
         return;
     }
 
-    const { id } = req.query;
-
     // Proceeds to getting a recipe by id
     try {
-        const recipe = await Recipe.findById(id).populate(
-            "user_id",
-            "username"
-        );
+        const { id } = req.query;
 
-        if (!recipe) {
-            response.send(404, "fail", "Recipe not found");
-            return;
-        }
-
-        const [recipeLikes, recipeComments, recipeSaves, users] =
+        const [recipe, users, recipeLikes, recipeComments, recipeSaves] =
             await Promise.all([
+                Recipe.findById(id).populate("user_id", "username"),
+                User.find({}),
                 Like.find({ recipe_id: id }),
                 Comment.find({ recipe_id: id }).sort({
                     updatedAt: -1,
                 }),
                 Save.find({ recipe_id: id }),
-                User.find({}),
             ]);
+
+        if (!recipe) {
+            response.send(404, "fail", "Recipe not found");
+            return;
+        }
 
         if (!recipeLikes && !recipeComments) {
             response.send(404, "fail", "Failed to fetch recipe interactions");
@@ -154,14 +150,14 @@ const GetRecipeById = asyncHandler(async (req, res) => {
             };
         });
 
-        const modifiedRecipe = {
+        const combinedRecipeData = {
             ...recipe.toObject(),
             likes,
             comments,
             saves,
         };
 
-        response.send(200, "success", "Recipe found", modifiedRecipe);
+        response.send(200, "success", "Recipe found", combinedRecipeData);
         return;
     } catch (error) {
         // Log the error
@@ -221,7 +217,7 @@ const GetRecipeByCategory = asyncHandler(async (req, res) => {
             return;
         }
 
-        const modifiedRecipes = recipes.map((recipe) => ({
+        const combinedRecipeData = recipes.map((recipe) => ({
             ...recipe.toObject(),
             likes: listOflikes.filter((like) =>
                 like.recipe_id.equals(recipe._id)
@@ -231,7 +227,7 @@ const GetRecipeByCategory = asyncHandler(async (req, res) => {
             ),
         }));
 
-        response.send(200, "success", "Recipes found", modifiedRecipes);
+        response.send(200, "success", "Recipes found", combinedRecipeData);
         return;
     } catch (error) {
         // Log the error
@@ -291,7 +287,7 @@ const GetRecipeByName = asyncHandler(async (req, res) => {
             return;
         }
 
-        const modifiedRecipes = recipes.map((recipe) => ({
+        const combinedRecipeData = recipes.map((recipe) => ({
             ...recipe.toObject(),
             likes: listOflikes.filter((like) =>
                 like.recipe_id.equals(recipe._id)
@@ -301,7 +297,7 @@ const GetRecipeByName = asyncHandler(async (req, res) => {
             ),
         }));
 
-        response.send(200, "success", "Recipes found", modifiedRecipes);
+        response.send(200, "success", "Recipes found", combinedRecipeData);
         return;
     } catch (error) {
         // Log the error
@@ -323,34 +319,11 @@ const GetRecipeByName = asyncHandler(async (req, res) => {
  * @returns {Promise<void>} A Promise that resolves when the operation is complete.
  */
 const CreateRecipe = asyncHandler(async (req, res) => {
-    const {
-        recipe_name,
-        image_url,
-        difficulty,
-        cooking_time,
-        tags,
-        categories,
-        description,
-        ingredients,
-        instructions,
-    } = req.body;
     const response = new ResponseBuilder(req, res);
     const fields = new FieldsValidator(req);
 
     // Check if the desctructured fields are in the request body
-    if (
-        !fields.areKeysInRequest({
-            recipe_name,
-            difficulty,
-            image_url,
-            cooking_time,
-            tags,
-            categories,
-            description,
-            ingredients,
-            instructions,
-        })
-    ) {
+    if (!fields.areKeysInRequest(req.body)) {
         response.send(
             400,
             "fail",
@@ -373,6 +346,7 @@ const CreateRecipe = asyncHandler(async (req, res) => {
 
     // Proceeds to making a new recipe
     try {
+        // Get the user id that wants to create a recipe
         const user_id = req.user.id;
 
         if (!user_id) {
@@ -382,15 +356,7 @@ const CreateRecipe = asyncHandler(async (req, res) => {
 
         const newRecipe = new Recipe({
             user_id,
-            recipe_name,
-            image_url,
-            difficulty,
-            tags,
-            categories,
-            cooking_time,
-            description,
-            ingredients,
-            instructions,
+            ...req.body,
         });
 
         const savedRecipe = await newRecipe.save();

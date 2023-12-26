@@ -27,6 +27,7 @@ class Fields {
             "category",
             "categories",
             "name",
+            "isSelfVisit",
         ];
     }
 

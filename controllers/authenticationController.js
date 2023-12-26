@@ -24,20 +24,11 @@ const { exceptionLogger, accessLogger } = require("../logs");
  * @returns {Promise<void>} - A promise that resolves once the registration process is complete.
  */
 const RegisterUser = asyncHandler(async (req, res) => {
-    const { username, email, password, first_name, last_name } = req.body;
     const response = new ResponseBuilder(req, res);
     const fields = new FieldsValidator(req);
 
     // Check if the desctructured fields are in the request body
-    if (
-        !fields.areKeysInRequest({
-            username,
-            email,
-            password,
-            first_name,
-            last_name,
-        })
-    ) {
+    if (!fields.areKeysInRequest(req.body)) {
         response.send(
             400,
             "fail",
@@ -64,21 +55,23 @@ const RegisterUser = asyncHandler(async (req, res) => {
         return;
     }
 
-    // Check if the email is already registered
-    const alreadyRegistered = await User.findOne({
-        $or: [{ username }, { email }],
-    });
-
-    if (alreadyRegistered) {
-        response.send(
-            400,
-            "fail",
-            "The provided username or email is already registered"
-        );
-        return;
-    }
-
     try {
+        const { username, email, password, first_name, last_name } = req.body;
+
+        // Check if the email is already registered
+        const alreadyRegistered = await User.findOne({
+            $or: [{ username }, { email }],
+        });
+
+        if (alreadyRegistered) {
+            response.send(
+                400,
+                "fail",
+                "The provided username or email is already registered"
+            );
+            return;
+        }
+
         // Hash the user's password
         const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -114,13 +107,12 @@ const RegisterUser = asyncHandler(async (req, res) => {
  * @returns {Promise<void>} - A promise that resolves once the login process is complete.
  */
 const LoginUser = asyncHandler(async (req, res) => {
-    const { login_identifier, password } = req.body;
     const response = new ResponseBuilder(req, res);
-    const token = new TokenManager();
     const fields = new FieldsValidator(req);
+    const token = new TokenManager();
 
     // Check if login_identifier and password fields exist in req.body
-    if (!fields.areKeysInRequest({ login_identifier, password })) {
+    if (!fields.areKeysInRequest(req.body)) {
         response.send(
             400,
             "fail",
@@ -142,6 +134,8 @@ const LoginUser = asyncHandler(async (req, res) => {
     }
 
     try {
+        const { login_identifier, password } = req.body;
+
         const user = await User.findOne({
             $or: [{ username: login_identifier }, { email: login_identifier }],
         });
