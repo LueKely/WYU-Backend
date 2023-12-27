@@ -57,15 +57,22 @@ const GetAllRecipes = asyncHandler(async (req, res) => {
             return;
         }
 
-        const combinedRecipeData = recipes.map((recipe) => ({
-            ...recipe.toObject(),
-            likes: listOflikes.filter((like) =>
-                like.recipe_id.equals(recipe._id)
-            ),
-            saves: listOfSaves.filter((save) =>
-                save.recipe_id.equals(recipe._id)
-            ),
-        }));
+        const combinedRecipeData = recipes.map((recipe) => {
+            const { _id, username } = recipe.user_id;
+            const { user_id, ...restOfRecipeData } = recipe.toObject();
+
+            return {
+                ...restOfRecipeData,
+                user_id: _id,
+                username,
+                likes: listOflikes.filter((like) =>
+                    like.recipe_id.equals(recipe._id)
+                ),
+                saves: listOfSaves.filter((save) =>
+                    save.recipe_id.equals(recipe._id)
+                ),
+            };
+        });
 
         response.send(200, "success", "Recipes found", combinedRecipeData);
         return;
@@ -150,8 +157,13 @@ const GetRecipeById = asyncHandler(async (req, res) => {
             };
         });
 
+        const { _id, username } = recipe;
+        const { user_id, ...restOfRecipeData } = recipe.toObject();
+
         const combinedRecipeData = {
-            ...recipe.toObject(),
+            ...restOfRecipeData,
+            user_id: _id,
+            username,
             likes,
             comments,
             saves,
@@ -198,7 +210,9 @@ const GetRecipeByCategory = asyncHandler(async (req, res) => {
 
     try {
         const [recipes, listOflikes, listOfSaves] = await Promise.all([
-            Recipe.find({ categories: { $in: [category] } })
+            Recipe.find({
+                categories: { $elemMatch: { $regex: category, $options: "i" } },
+            })
                 .sort({ updatedAt: -1 })
                 .populate("user_id", "username"),
             Like.find({}),
@@ -217,15 +231,22 @@ const GetRecipeByCategory = asyncHandler(async (req, res) => {
             return;
         }
 
-        const combinedRecipeData = recipes.map((recipe) => ({
-            ...recipe.toObject(),
-            likes: listOflikes.filter((like) =>
-                like.recipe_id.equals(recipe._id)
-            ),
-            saves: listOfSaves.filter((save) =>
-                save.recipe_id.equals(recipe._id)
-            ),
-        }));
+        const combinedRecipeData = recipes.map((recipe) => {
+            const { _id, username } = recipe.user_id;
+            const { user_id, ...restOfRecipeData } = recipe.toObject();
+
+            return {
+                ...restOfRecipeData,
+                user_id: _id,
+                username,
+                likes: listOflikes.filter((like) =>
+                    like.recipe_id.equals(recipe._id)
+                ),
+                saves: listOfSaves.filter((save) =>
+                    save.recipe_id.equals(recipe._id)
+                ),
+            };
+        });
 
         response.send(200, "success", "Recipes found", combinedRecipeData);
         return;
@@ -278,24 +299,32 @@ const GetRecipeByName = asyncHandler(async (req, res) => {
         if (!recipes || recipes.length === 0) {
             const message = !recipes
                 ? "Failed to fetch recipes"
-                : "No recipes found";
+                : `No ${name} recipes found`;
             response.send(
                 !recipes ? 404 : 200,
                 !recipes ? "fail" : "success",
-                message
+                message,
+                []
             );
             return;
         }
 
-        const combinedRecipeData = recipes.map((recipe) => ({
-            ...recipe.toObject(),
-            likes: listOflikes.filter((like) =>
-                like.recipe_id.equals(recipe._id)
-            ),
-            saves: listOfSaves.filter((save) =>
-                save.recipe_id.equals(recipe._id)
-            ),
-        }));
+        const combinedRecipeData = recipes.map((recipe) => {
+            const { _id, username } = recipe.user_id;
+            const { user_id, ...restOfRecipeData } = recipe.toObject();
+
+            return {
+                ...restOfRecipeData,
+                user_id: _id,
+                username,
+                likes: listOflikes.filter((like) =>
+                    like.recipe_id.equals(recipe._id)
+                ),
+                saves: listOfSaves.filter((save) =>
+                    save.recipe_id.equals(recipe._id)
+                ),
+            };
+        });
 
         response.send(200, "success", "Recipes found", combinedRecipeData);
         return;
