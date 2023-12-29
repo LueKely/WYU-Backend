@@ -12,11 +12,17 @@ class ResponseBuilder {
      * @returns {Object} - The standardized response object.
      */
     build(status = "success", message, data) {
-        return {
+        const responseData = data;
+        const response = {
             status,
             message,
-            ...(data.length > 0 && { data }),
         };
+
+        if (data) {
+            response.data = responseData;
+        }
+
+        return response;
     }
 
     /**

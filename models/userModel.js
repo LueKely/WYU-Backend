@@ -28,12 +28,19 @@ const UserSchema = mongoose.Schema(
             type: String,
             default: "",
         },
-        social_links: {
-            type: Map,
-            of: String,
-            default: {},
+        fb_username: {
+            type: String,
+            default: "",
         },
-        user_profile: {
+        ig_username: {
+            type: String,
+            default: "",
+        },
+        twt_username: {
+            type: String,
+            default: "",
+        },
+        user_profile_image: {
             type: String,
             default: "",
         },

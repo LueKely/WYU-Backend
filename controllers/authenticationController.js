@@ -50,13 +50,25 @@ const RegisterUser = asyncHandler(async (req, res) => {
     }
 
     // Check if harmful chars are in the fields
-    if (fields.hasHarmfulChars(req.body)) {
+    /* if (fields.hasHarmfulChars(req.body)) {
         response.send(400, "fail", "Some fields has invalid characters");
         return;
-    }
+    } */
 
     try {
-        const { username, email, password, first_name, last_name } = req.body;
+        const {
+            username,
+            email,
+            password,
+            first_name,
+            last_name,
+            user_bio,
+            fb_username,
+            ig_username,
+            twt_username,
+            user_profile_image,
+            user_bg_image,
+        } = req.body;
 
         // Check if the email is already registered
         const alreadyRegistered = await User.findOne({
@@ -82,6 +94,12 @@ const RegisterUser = asyncHandler(async (req, res) => {
             password: hashedPassword,
             first_name,
             last_name,
+            user_bio,
+            fb_username,
+            ig_username,
+            twt_username,
+            user_profile_image,
+            user_bg_image,
         });
 
         if (!newUser) {

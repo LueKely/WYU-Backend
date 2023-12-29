@@ -25,7 +25,7 @@ const GetUserFullInfo = asyncHandler(async (req, res) => {
     try {
         const { id, isSelfVisit } = req.query;
 
-        const user = await User.findById(id).select("-password -__v -_id");
+        const user = await User.findById(id).select("-password -__v");
 
         if (!user) {
             response.send(404, "fail", "User not found");
@@ -40,7 +40,7 @@ const GetUserFullInfo = asyncHandler(async (req, res) => {
             Save.find({ user_id: id }),
         ]);
 
-        if (!recipes || recipes.length === 0) {
+        /* if (!recipes || recipes.length === 0) {
             const message = !recipes
                 ? "Failed to fetch recipes"
                 : "No recipes found";
@@ -50,7 +50,7 @@ const GetUserFullInfo = asyncHandler(async (req, res) => {
                 message
             );
             return;
-        }
+        } */
 
         let userSavedRecipes = [];
         if (Number(isSelfVisit) === 1) {
@@ -77,16 +77,26 @@ const GetUserFullInfo = asyncHandler(async (req, res) => {
         const combinedUserInformations = {
             user: user.toObject(),
             posts: recipes
-                .filter((recipe) => recipe.user_id.equals(user._id))
-                .map((recipe) => ({
-                    ...recipe.toObject(),
-                    likes: listOflikes.filter((like) =>
-                        like.recipe_id.equals(recipe._id)
-                    ),
-                    saves: listOfSaves.filter((save) =>
-                        save.recipe_id.equals(recipe._id)
-                    ),
-                })),
+                ? recipes
+                      .filter((recipe) => recipe.user_id._id.equals(user._id))
+                      .map((recipe) => {
+                          const { _id, username } = recipe.user_id;
+                          const { user_id, ...restOfRecipeData } =
+                              recipe.toObject();
+
+                          return {
+                              ...restOfRecipeData,
+                              user_id: _id,
+                              username,
+                              likes: listOflikes.filter((like) =>
+                                  like.recipe_id.equals(recipe._id)
+                              ),
+                              saves: listOfSaves.filter((save) =>
+                                  save.recipe_id.equals(recipe._id)
+                              ),
+                          };
+                      })
+                : [],
             saves: userSavedRecipes ? userSavedRecipes : [],
         };
 

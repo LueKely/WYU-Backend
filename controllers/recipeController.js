@@ -153,7 +153,9 @@ const GetRecipeById = asyncHandler(async (req, res) => {
             };
         });
 
-        const { _id, username } = recipe;
+        console.log(recipe);
+
+        const { _id, username } = recipe.user_id;
         const { user_id, ...restOfRecipeData } = recipe.toObject();
 
         const combinedRecipeData = {

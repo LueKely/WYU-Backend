@@ -21,8 +21,10 @@ class Fields {
             "recipe_id",
             "user_comment",
             "user_bio",
-            "social_links",
-            "user_profile",
+            "fb_username",
+            "ig_username",
+            "twt_username",
+            "user_profile_image",
             "user_bg_image",
             "category",
             "categories",
@@ -61,7 +63,7 @@ class Fields {
      * @returns {boolean} - True if any value contains harmful characters, false otherwise.
      */
     hasHarmfulChars = (fields = {}) => {
-        const disallowedCharsRegex = /[<>&'";{}()=*+?![\]^$|\\]/;
+        const disallowedCharsRegex = /[<>&;{}()=*+?[\]^$|\\]/;
         return Object.values(fields).some((value) =>
             disallowedCharsRegex.test(value)
         );

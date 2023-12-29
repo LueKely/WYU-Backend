@@ -10,6 +10,10 @@ const CommentsSchema = mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: "Recipe",
         },
+        username: {
+            type: String,
+            required: [true, "Username field is required"],
+        },
         user_comment: {
             type: String,
             required: [true, "Comment field is required"],
