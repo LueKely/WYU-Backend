@@ -2,9 +2,7 @@
 const asyncHandler = require("express-async-handler");
 
 // Import Local Modules
-const Like = require("../models/interactions/likesModel");
-const Comment = require("../models/interactions/commentsModel");
-const Save = require("../models/interactions/saveModel");
+const { Like, Save, Comment } = require("../models/index");
 const FieldsValidator = require("../helpers/FieldsValidator");
 const ResponseBuilder = require("../helpers/ResponseBuilder");
 const { exceptionLogger } = require("../logs");

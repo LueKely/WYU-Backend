@@ -3,6 +3,15 @@ const asyncHandler = require("express-async-handler");
 const ResponseBuilder = require("../helpers/ResponseBuilder");
 const TokenManager = require("../helpers/TokenManager");
 
+/**
+ * Middleware function to validate and verify the JWT token in the request header.
+ * If the token is valid, it adds the decoded user information to the request object.
+ *
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ * @param {function} next - Express next middleware function.
+ * @returns {Promise<void>} - Promise that resolves after processing the request.
+ */
 const validateToken = asyncHandler(async (req, res, next) => {
     const response = new ResponseBuilder(req, res);
     const token = new TokenManager();

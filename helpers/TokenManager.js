@@ -4,53 +4,52 @@ class TokenManager {
         this.jwt = require("jsonwebtoken");
     }
 
-    generate(data, expiresIn = "") {
+    /**
+     * Generate a JWT token.
+     * @param {Object} data - The data to be included in the token payload.
+     * @param {string} expiresIn - The expiration time for the token (default: "1hr").
+     * @returns {string|boolean} - The generated JWT token or false if an error occurs.
+     */
+    generate(data, expiresIn = "1hr") {
         if (typeof data === "object") {
-            const exp = expiresIn || "1hr";
-
-            const token = this.jwt.sign({ data }, this.secretKey, {
-                expiresIn: exp,
-            });
-
-            if (token) {
+            try {
+                const token = this.jwt.sign({ data }, this.secretKey, {
+                    expiresIn,
+                });
                 return token;
+            } catch (error) {
+                console.error(error);
+                return false;
             }
-
-            return false;
         }
     }
 
+    /**
+     * Verify a JWT token.
+     * @param {string} token - The JWT token to be verified.
+     * @returns {Object} - An object containing the status and data or fail message.
+     */
     verify(token) {
-        let response = null;
-
-        if (token) {
-            try {
-                const decoded = this.jwt.verify(token, this.secretKey);
-
-                if (decoded) {
-                    response = {
-                        status: "success",
-                        data: decoded.data,
-                    };
-                }
-
-                return response;
-            } catch (error) {
-                response = {
-                    status: "fail",
-                    message: "User is not authorized",
-                };
-            }
-
-            return;
+        if (!token) {
+            return {
+                status: "fail",
+                message: "Missing Token",
+            };
         }
 
-        response = {
-            status: "fail",
-            message: "Missing Token",
-        };
-
-        return response;
+        try {
+            const decoded = this.jwt.verify(token, this.secretKey);
+            return {
+                status: "success",
+                data: decoded.data,
+            };
+        } catch (error) {
+            console.error(error);
+            return {
+                status: "fail",
+                message: "Invalid Token",
+            };
+        }
     }
 }
 
