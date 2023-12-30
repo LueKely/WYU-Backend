@@ -61,8 +61,13 @@ const GetUserFullInfo = asyncHandler(async (req, res) => {
                 );
 
                 if (matchingRecipe) {
+                    const { _id, username } = matchingRecipe.user_id;
+                    const { user_id, ...restOfRecipeData } =
+                        matchingRecipe.toObject();
                     return {
-                        ...matchingRecipe.toObject(),
+                        ...restOfRecipeData,
+                        user_id: _id,
+                        username,
                         saves: listOfSaves.filter((save) =>
                             save.recipe_id.equals(matchingRecipe._id)
                         ),
