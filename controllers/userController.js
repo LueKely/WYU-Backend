@@ -8,7 +8,7 @@ const { exceptionLogger } = require("../logs");
 
 const GetUserFullInfo = asyncHandler(async (req, res) => {
     const response = new ResponseBuilder(req, res);
-    const fields = new FieldsValidator(req.query);
+    const fields = new FieldsValidator(req);
 
     // Check if the fields in response are accepted
     if (!fields.areResponseKeysAccepted(req.query)) {
@@ -39,18 +39,6 @@ const GetUserFullInfo = asyncHandler(async (req, res) => {
             Like.find({}),
             Save.find({ user_id: id }),
         ]);
-
-        /* if (!recipes || recipes.length === 0) {
-            const message = !recipes
-                ? "Failed to fetch recipes"
-                : "No recipes found";
-            response.send(
-                !recipes ? 404 : 200,
-                !recipes ? "fail" : "success",
-                message
-            );
-            return;
-        } */
 
         let userSavedRecipes = [];
         if (Number(isSelfVisit) === 1) {
@@ -122,7 +110,57 @@ const GetUserFullInfo = asyncHandler(async (req, res) => {
     }
 });
 
-const EditUserInfo = asyncHandler(async (req, res) => {});
+const EditUserInfo = asyncHandler(async (req, res) => {
+    const response = new ResponseBuilder(req, res);
+    const fields = new FieldsValidator(req);
+
+    // Check if the desctructured fields are in the request body
+    if (!fields.areKeysInRequest(req.body)) {
+        response.send(
+            400,
+            "fail",
+            "Required fields are missing in the request"
+        );
+        return;
+    }
+
+    // Check if the fields in response are accepted
+    if (!fields.areResponseKeysAccepted(req.body)) {
+        response.send(400, "fail", "The provided field name is invalid");
+        return;
+    }
+
+    try {
+        // Checks if the user data in token is same as the user data in the request
+        if (req.user.id !== req.body.id) {
+            response.send(
+                400,
+                "fail",
+                "The provided ID is not matching with the user ID in the token"
+            );
+            return;
+        }
+
+        const user = await User.findByIdAndUpdate(req.body.id, req.body, {
+            new: true,
+            runValidators: true,
+        }).select("-password -__v");
+
+        if (!user) {
+            response.send(404, "fail", "User not found");
+            return;
+        }
+
+        response.send(200, "success", "User info updated successfully", user);
+    } catch (error) {
+        // Log the error
+        console.log(error);
+        exceptionLogger.error(error);
+
+        // Handle the error and send an appropriate response
+        response.send(500, "fail", "Internal Server Error");
+    }
+});
 
 module.exports = {
     GetUserFullInfo,

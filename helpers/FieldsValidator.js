@@ -12,9 +12,9 @@ class Fields {
             "difficulty",
             "cooking_time",
             "description",
+            "categories",
             "ingredients",
             "instructions",
-            "tags",
             "image_url",
             "id",
             "user_id",
@@ -27,7 +27,6 @@ class Fields {
             "user_profile_image",
             "user_bg_image",
             "category",
-            "categories",
             "name",
             "isSelfVisit",
         ];

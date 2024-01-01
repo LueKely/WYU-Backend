@@ -23,10 +23,6 @@ const RecipeSchema = mongoose.Schema(
             type: String,
             required: [true, "Cooking Time field is required"],
         },
-        tags: {
-            type: Array,
-            required: [true, "Tags field is required"],
-        },
         categories: {
             type: Array,
             required: [true, "Categories field is required"],
