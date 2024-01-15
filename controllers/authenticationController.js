@@ -68,6 +68,7 @@ const RegisterUser = asyncHandler(async (req, res) => {
             twt_username,
             user_profile_image,
             user_bg_image,
+            user_level,
         } = req.body;
 
         // Check if the email is already registered
@@ -100,6 +101,7 @@ const RegisterUser = asyncHandler(async (req, res) => {
             twt_username,
             user_profile_image,
             user_bg_image,
+            user_level,
         });
 
         if (!newUser) {
@@ -178,6 +180,7 @@ const LoginUser = asyncHandler(async (req, res) => {
             email: user.email,
             first_name: user.first_name,
             last_name: user.last_name,
+            user_level: user.user_level,
         };
 
         const expirationDate = Math.floor(Date.now() / 1000) + 60 * 60;
@@ -201,16 +204,4 @@ const LoginUser = asyncHandler(async (req, res) => {
     }
 });
 
-/**
- * Handles the logout of a user.
- * @function
- * @async
- * @param {Object} req - Express request object.
- * @param {Object} res - Express response object.
- * @returns {Promise<void>} - A promise that resolves once the logout process is complete.
- */
-const LogoutUser = asyncHandler(async (req, res) => {
-    res.status(200).json({ message: "Logout User" });
-});
-
-module.exports = { RegisterUser, LoginUser, LogoutUser };
+module.exports = { RegisterUser, LoginUser };

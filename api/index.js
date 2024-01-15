@@ -5,8 +5,8 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 
 // Import local modules
-const ConnectDB = require("./configs/dbConnect");
-const { exceptionLogger } = require("./logs");
+const ConnectDB = require("../configs/dbConnect");
+const { exceptionLogger } = require("../logs");
 
 // Variable and function declarations
 const app = express();
@@ -23,15 +23,17 @@ const serverStart = async () => {
             // All Middlewares will go here
             app.use(
                 cors({
-                    origin: "http://localhost:9000",
+                    origin: "*",
                     credentials: true,
                 })
             );
             app.use(bodyParser.json());
 
-            app.use("/api/auth", require("./routes/authenticationRoutes"));
-            app.use("/api/profile", require("./routes/userRoutes"));
-            app.use("/api/recipe", require("./routes/recipeRoutes"));
+            app.use("/api/auth", require("../routes/authenticationRoutes"));
+            app.use("/api/profile", require("../routes/userRoutes"));
+            app.use("/api/recipe", require("../routes/recipeRoutes"));
+            app.use("/api/itr", require("../routes/interactionsRoutes"));
+            app.use("/api/admin", require("../routes/adminRoutes"));
 
             app.listen(PORT, () => {
                 console.log(response.message);
@@ -45,3 +47,5 @@ const serverStart = async () => {
 };
 
 serverStart();
+
+export default app;

@@ -48,6 +48,10 @@ const UserSchema = mongoose.Schema(
             type: String,
             default: "",
         },
+        user_level: {
+            type: String,
+            default: "user",
+        },
     },
     {
         timestamps: true,

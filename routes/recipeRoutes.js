@@ -8,6 +8,7 @@ const {
     GetRecipeByCategory,
     GetRecipeByName,
     CreateRecipe,
+    UpdateRecipe,
 } = require("../controllers/recipeController");
 const validateToken = require("../middlewares/validateToken");
 
@@ -28,5 +29,6 @@ const distributorRecipeRoutes = asyncHandler((req, res) => {
 router.use(validateToken);
 router.get("/", distributorRecipeRoutes);
 router.post("/create", CreateRecipe);
+router.put("/update", UpdateRecipe);
 
 module.exports = router;

@@ -29,6 +29,7 @@ class Fields {
             "category",
             "name",
             "isSelfVisit",
+            "user_level",
         ];
     }
 

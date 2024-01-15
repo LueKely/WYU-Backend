@@ -407,10 +407,77 @@ const CreateRecipe = asyncHandler(async (req, res) => {
     }
 });
 
+/**
+ * Controller function for editing a recipe.
+ *
+ * @async
+ * @function
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ * @returns {Promise<void>} A Promise that resolves when the operation is complete.
+ */
+const UpdateRecipe = asyncHandler(async (req, res) => {
+    const response = new ResponseBuilder(req, res);
+    const fields = new FieldsValidator(req);
+
+    // Check if the desctructured fields are in the request body
+    if (!fields.areKeysInRequest(req.body)) {
+        response.send(
+            400,
+            "fail",
+            "Required fields are missing in the request"
+        );
+        return;
+    }
+
+    // Check if the fields in response are accepted
+    if (!fields.areResponseKeysAccepted(req.body)) {
+        response.send(400, "fail", "The provided field name is invalid");
+        return;
+    }
+
+    // Check if any required fields are empty
+    if (!fields.areResponseValuesEmpty(req.body)) {
+        response.send(400, "fail", "Some fields have empty values");
+        return;
+    }
+
+    // Proceeds to editing a recipe
+    try {
+        const { id, ...restOfRecipeData } = req.body;
+
+        const editedRecipe = await Recipe.findByIdAndUpdate(
+            id,
+            { ...restOfRecipeData },
+            { new: true }
+        );
+
+        if (!editedRecipe) {
+            response.send(500, "fail", "Failed to edit recipe", editedRecipe);
+            return;
+        }
+
+        response.send(
+            200,
+            "success",
+            "Recipe edited successfully",
+            editedRecipe
+        );
+        return;
+    } catch (error) {
+        // Log the error
+        console.error(error);
+        exceptionLogger.error(error);
+        // Handle the error and send an appropriate response
+        response.send(500, "error", "Internal Server Error");
+    }
+});
+
 module.exports = {
     GetAllRecipes,
     GetRecipeById,
     GetRecipeByCategory,
     GetRecipeByName,
     CreateRecipe,
+    UpdateRecipe,
 };
