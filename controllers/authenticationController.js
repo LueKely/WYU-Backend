@@ -28,7 +28,7 @@ const RegisterUser = asyncHandler(async (req, res) => {
     const fields = new FieldsValidator(req);
 
     // Check if the desctructured fields are in the request body
-    if (!fields.areKeysInRequest(req.body)) {
+    if (!fields.areKeysInRequest(req.body, "body")) {
         response.send(
             400,
             "fail",
@@ -48,12 +48,6 @@ const RegisterUser = asyncHandler(async (req, res) => {
         response.send(400, "fail", "Some fields have empty values");
         return;
     }
-
-    // Check if harmful chars are in the fields
-    /* if (fields.hasHarmfulChars(req.body)) {
-        response.send(400, "fail", "Some fields has invalid characters");
-        return;
-    } */
 
     try {
         const {
@@ -132,7 +126,7 @@ const LoginUser = asyncHandler(async (req, res) => {
     const token = new TokenManager();
 
     // Check if login_identifier and password fields exist in req.body
-    if (!fields.areKeysInRequest(req.body)) {
+    if (!fields.areKeysInRequest(req.body, "body")) {
         response.send(
             400,
             "fail",

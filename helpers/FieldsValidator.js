@@ -38,8 +38,21 @@ class Fields {
      * @param {Object} fields - The keys to check.
      * @returns {boolean} - True if all keys are present, false otherwise.
      */
-    areKeysInRequest = (fields = {}) =>
-        Object.keys(fields).every((key) => this.req.body.hasOwnProperty(key));
+    areKeysInRequest = (fields = {}, format) => {
+        if (format === "body") {
+            return Object.keys(fields).every((key) =>
+                this.req.body.hasOwnProperty(key)
+            );
+        } else if (format === "params") {
+            return Object.keys(fields).every((key) =>
+                this.req.params.hasOwnProperty(key)
+            );
+        } else if (format === "query") {
+            return Object.keys(fields).every((key) =>
+                this.req.query.hasOwnProperty(key)
+            );
+        }
+    };
 
     /**
      * Check if specified keys are accepted fields.

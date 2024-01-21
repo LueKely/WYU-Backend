@@ -21,7 +21,7 @@ const LikeController = asyncHandler(async (req, res) => {
     const fields = new FieldsValidator(req);
 
     // Check if the desctructured fields are in the request body
-    if (!fields.areKeysInRequest(req.body)) {
+    if (!fields.areKeysInRequest(req.body, "body")) {
         response.send(
             400,
             "fail",
@@ -97,7 +97,7 @@ const SaveController = asyncHandler(async (req, res) => {
     const fields = new FieldsValidator(req);
 
     // Check if the desctructured fields are in the request body
-    if (!fields.areKeysInRequest(req.body)) {
+    if (!fields.areKeysInRequest(req.body, "body")) {
         response.send(
             400,
             "fail",
@@ -172,7 +172,7 @@ const CommentController = asyncHandler(async (req, res) => {
     const fields = new FieldsValidator(req);
 
     // Check if the desctructured fields are in the request body
-    if (!fields.areKeysInRequest(req.body)) {
+    if (!fields.areKeysInRequest(req.body, "body")) {
         response.send(
             400,
             "fail",

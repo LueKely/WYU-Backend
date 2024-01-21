@@ -10,6 +10,16 @@ const GetUserFullInfo = asyncHandler(async (req, res) => {
     const response = new ResponseBuilder(req, res);
     const fields = new FieldsValidator(req);
 
+    // Check if the desctructured fields are in the request body
+    if (!fields.areKeysInRequest(req.query, "query")) {
+        response.send(
+            400,
+            "fail",
+            "Required fields are missing in the request"
+        );
+        return;
+    }
+
     // Check if the fields in response are accepted
     if (!fields.areResponseKeysAccepted(req.query)) {
         response.send(400, "fail", "The provided query name is invalid");

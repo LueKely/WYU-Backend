@@ -9,6 +9,7 @@ const {
     GetRecipeByName,
     CreateRecipe,
     UpdateRecipe,
+    DeleteRecipe,
 } = require("../controllers/recipeController");
 const validateToken = require("../middlewares/validateToken");
 
@@ -30,5 +31,6 @@ router.use(validateToken);
 router.get("/", distributorRecipeRoutes);
 router.post("/create", CreateRecipe);
 router.put("/update", UpdateRecipe);
+router.delete("/delete", DeleteRecipe);
 
 module.exports = router;

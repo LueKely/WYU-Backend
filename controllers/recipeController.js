@@ -20,6 +20,16 @@ const GetAllRecipes = asyncHandler(async (req, res) => {
     const response = new ResponseBuilder(req, res);
     const fields = new FieldsValidator(req);
 
+    // Check if the desctructured fields are in the request query
+    if (!fields.areKeysInRequest(req.query, "query")) {
+        response.send(
+            400,
+            "fail",
+            "Required fields are missing in the request"
+        );
+        return;
+    }
+
     // Check if the fields in response are accepted
     if (!fields.areResponseKeysAccepted(req.query)) {
         response.send(400, "fail", "The provided query name is invalid");
@@ -94,6 +104,16 @@ const GetAllRecipes = asyncHandler(async (req, res) => {
 const GetRecipeById = asyncHandler(async (req, res) => {
     const response = new ResponseBuilder(req, res);
     const fields = new FieldsValidator(req);
+
+    // Check if the desctructured fields are in the request query
+    if (!fields.areKeysInRequest(req.query, "query")) {
+        response.send(
+            400,
+            "fail",
+            "Required fields are missing in the request"
+        );
+        return;
+    }
 
     // Check if the fields in response are accepted
     if (!fields.areResponseKeysAccepted(req.query)) {
@@ -190,6 +210,16 @@ const GetRecipeByCategory = asyncHandler(async (req, res) => {
     const response = new ResponseBuilder(req, res);
     const fields = new FieldsValidator(req);
 
+    // Check if the desctructured fields are in the request query
+    if (!fields.areKeysInRequest(req.query, "query")) {
+        response.send(
+            400,
+            "fail",
+            "Required fields are missing in the request"
+        );
+        return;
+    }
+
     // Check if the fields in response are accepted
     if (!fields.areResponseKeysAccepted(req.query)) {
         response.send(400, "fail", "The provided query name is invalid");
@@ -268,6 +298,16 @@ const GetRecipeByCategory = asyncHandler(async (req, res) => {
 const GetRecipeByName = asyncHandler(async (req, res) => {
     const response = new ResponseBuilder(req, res);
     const fields = new FieldsValidator(req);
+
+    // Check if the desctructured fields are in the request query
+    if (!fields.areKeysInRequest(req.query, "query")) {
+        response.send(
+            400,
+            "fail",
+            "Required fields are missing in the request"
+        );
+        return;
+    }
 
     // Check if the fields in response are accepted
     if (!fields.areResponseKeysAccepted(req.query)) {
@@ -348,7 +388,7 @@ const CreateRecipe = asyncHandler(async (req, res) => {
     const fields = new FieldsValidator(req);
 
     // Check if the desctructured fields are in the request body
-    if (!fields.areKeysInRequest(req.body)) {
+    if (!fields.areKeysInRequest(req.body, "body")) {
         response.send(
             400,
             "fail",
@@ -421,7 +461,7 @@ const UpdateRecipe = asyncHandler(async (req, res) => {
     const fields = new FieldsValidator(req);
 
     // Check if the desctructured fields are in the request body
-    if (!fields.areKeysInRequest(req.body)) {
+    if (!fields.areKeysInRequest(req.body, "body")) {
         response.send(
             400,
             "fail",
@@ -473,6 +513,59 @@ const UpdateRecipe = asyncHandler(async (req, res) => {
     }
 });
 
+/**
+ * Controller function for deleting a recipe.
+ *
+ * @async
+ * @function
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ * @returns {Promise<void>} A Promise that resolves when the operation is complete.
+ */
+const DeleteRecipe = asyncHandler(async (req, res) => {
+    const response = new ResponseBuilder(req, res);
+    const fields = new FieldsValidator(req);
+
+    // Check if the desctructured fields are in the request query
+    if (!fields.areKeysInRequest(req.query, "query")) {
+        response.send(400, "fail", "Required query are missing in the request");
+        return;
+    }
+
+    // Check if the fields in response are accepted
+    if (!fields.areResponseKeysAccepted(req.query)) {
+        response.send(400, "fail", "The provided query name is invalid");
+        return;
+    }
+
+    // Check if any required fields are empty
+    if (!fields.areResponseValuesEmpty(req.query)) {
+        response.send(400, "fail", "Some query have empty values");
+        return;
+    }
+
+    // Proceeds to editing a recipe
+    try {
+        const { id } = req.query;
+
+        const deletedRecipe = await Recipe.findByIdAndDelete(id);
+
+        if (!deletedRecipe) {
+            response.send(500, "fail", "Failed to delete recipe");
+            return;
+        }
+
+        response.send(200, "success", "Recipe deleted successfully");
+        return;
+    } catch (error) {
+        // Log the error
+        console.error(error);
+        exceptionLogger.error(error);
+        // Handle the error and send an appropriate response
+        response.send(500, "error", "Internal Server Error");
+    }
+});
+
 module.exports = {
     GetAllRecipes,
     GetRecipeById,
@@ -480,4 +573,5 @@ module.exports = {
     GetRecipeByName,
     CreateRecipe,
     UpdateRecipe,
+    DeleteRecipe,
 };
