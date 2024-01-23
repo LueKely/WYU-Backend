@@ -91,8 +91,6 @@ const DeleteData = asyncHandler(async (req, res) => {
                 await Save.deleteMany({ recipe_id: id }),
             ]);
 
-            console.log(result);
-
             if (!result) {
                 return response.send(404, "fail", "Recipe not found");
             }
