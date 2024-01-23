@@ -30,6 +30,7 @@ class Fields {
             "name",
             "isSelfVisit",
             "user_level",
+            "model",
         ];
     }
 

@@ -23,7 +23,7 @@ const serverStart = async () => {
             // All Middlewares will go here
             app.use(
                 cors({
-                    origin: "http://localhost:9000",
+                    origin: ["http://localhost:9000", "http://localhost:5173"],
                     credentials: true,
                 })
             );
@@ -33,6 +33,7 @@ const serverStart = async () => {
             app.use("/api/profile", require("./routes/userRoutes"));
             app.use("/api/recipe", require("./routes/recipeRoutes"));
             app.use("/api/itr", require("./routes/interactionsRoutes"));
+            app.use("/api/adm", require("./routes/adminRoutes"));
 
             app.listen(PORT, () => {
                 console.log(response.message);
