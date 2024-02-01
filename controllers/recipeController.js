@@ -43,7 +43,8 @@ const GetAllRecipes = asyncHandler(async (req, res) => {
     }
 
     try {
-        const [recipes, listOflikes, listOfSaves] = await Promise.all([
+        const [user, recipes, listOflikes, listOfSaves] = await Promise.all([
+            User.find({}),
             Recipe.find({})
                 .sort({ updatedAt: -1 })
                 .populate("user_id", "username"),
@@ -65,11 +66,14 @@ const GetAllRecipes = asyncHandler(async (req, res) => {
 
         const combinedRecipeData = recipes.map((recipe) => {
             const { _id, username } = recipe.user_id;
+            const current_user = user.find((user) => user._id.equals(_id));
+
             const { user_id, ...restOfRecipeData } = recipe.toObject();
 
             return {
                 ...restOfRecipeData,
                 user_id: _id,
+                user_profile_image: current_user.user_profile_image,
                 username,
                 likes: listOflikes.filter((like) =>
                     like.recipe_id.equals(recipe._id)
@@ -80,7 +84,15 @@ const GetAllRecipes = asyncHandler(async (req, res) => {
             };
         });
 
+        if (!combinedRecipeData) {
+            response.send(500, "fail", "Failed to fetch recipes");
+            return;
+        }
+
+        console.log(combinedRecipeData);
+
         response.send(200, "success", "Recipes found", combinedRecipeData);
+
         return;
     } catch (error) {
         console.error(error);
@@ -131,8 +143,9 @@ const GetRecipeById = asyncHandler(async (req, res) => {
     try {
         const { id } = req.query;
 
-        const [recipe, users, recipeLikes, recipeComments, recipeSaves] =
+        const [user, recipe, users, recipeLikes, recipeComments, recipeSaves] =
             await Promise.all([
+                User.find({}),
                 Recipe.findById(id).populate("user_id", "username"),
                 User.find({}),
                 Like.find({ recipe_id: id }),
@@ -170,16 +183,19 @@ const GetRecipeById = asyncHandler(async (req, res) => {
                 user_id: comment.user_id,
                 username: user ? user.username : "Unknown User",
                 user_comment: comment.user_comment,
+                user_profile_image: user ? user.user_profile_image : "",
             };
         });
 
         const { _id, username } = recipe.user_id;
+        const current_user = user.find((user) => user._id.equals(_id));
         const { user_id, ...restOfRecipeData } = recipe.toObject();
 
         const combinedRecipeData = {
             ...restOfRecipeData,
             user_id: _id,
             username,
+            user_profile_image: current_user.user_profile_image,
             likes,
             comments,
             saves,

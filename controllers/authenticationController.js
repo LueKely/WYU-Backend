@@ -174,6 +174,7 @@ const LoginUser = asyncHandler(async (req, res) => {
             email: user.email,
             first_name: user.first_name,
             last_name: user.last_name,
+            user_profile_image: user.user_profile_image,
             user_level: user.user_level,
         };
 

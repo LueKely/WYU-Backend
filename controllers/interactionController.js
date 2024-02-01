@@ -2,7 +2,7 @@
 const asyncHandler = require("express-async-handler");
 
 // Import Local Modules
-const { Like, Save, Comment } = require("../models/index");
+const { User, Like, Save, Comment } = require("../models/index");
 const FieldsValidator = require("../helpers/FieldsValidator");
 const ResponseBuilder = require("../helpers/ResponseBuilder");
 const { exceptionLogger } = require("../logs");
@@ -196,12 +196,20 @@ const CommentController = asyncHandler(async (req, res) => {
     try {
         const interactionData = { ...req.body };
 
-        const savedInteraction = await Comment.create(interactionData);
+        const user = await User.findById(interactionData.user_id);
+        let savedInteraction = await Comment.create(interactionData);
 
         if (!savedInteraction) {
             response.send(400, "fail", "Could not add comment interaction");
             return;
         }
+
+        savedInteraction = {
+            ...savedInteraction._doc,
+            user_profile_image: user.user_profile_image,
+        };
+
+        console.log(savedInteraction);
 
         response.send(
             201,
