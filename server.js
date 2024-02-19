@@ -23,7 +23,11 @@ const serverStart = async () => {
             // All Middlewares will go here
             app.use(
                 cors({
-                    origin: ["http://localhost:9001", "http://localhost:5173"],
+                    origin: [
+                        "http://localhost:9001",
+                        "http://localhost:9000",
+                        "http://localhost:5173",
+                    ],
                     credentials: true,
                 })
             );
@@ -45,5 +49,5 @@ const serverStart = async () => {
         exceptionLogger.error("(Server): ", error);
     }
 };
-//please work
+
 serverStart();

@@ -89,8 +89,6 @@ const GetAllRecipes = asyncHandler(async (req, res) => {
             return;
         }
 
-        console.log(combinedRecipeData);
-
         response.send(200, "success", "Recipes found", combinedRecipeData);
 
         return;

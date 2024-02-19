@@ -209,8 +209,6 @@ const CommentController = asyncHandler(async (req, res) => {
             user_profile_image: user.user_profile_image,
         };
 
-        console.log(savedInteraction);
-
         response.send(
             201,
             "success",
